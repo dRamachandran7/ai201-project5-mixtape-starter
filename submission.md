@@ -2,9 +2,31 @@
 
 In this project, I used some AI tools to help me create tests, as well as help me with the commands neccessary to trigger the issues. As for the fixes themselves, I was able to come up with it myself.
 
-## models.py
+## Codebase map
 
-This defines 7 SQLAlchemy models: User, Tag, Song, ListeningEvent, Rating, Playlist, and Notification.
+- app.py: The Flask app factory. Creates the app, configures the SQLite database, and registers the four route blueprints (songs, playlists, users, feed).
+
+- models.py: This defines 7 SQLAlchemy models: User, Tag, Song, ListeningEvent, Rating, Playlist, and Notification.
+
+- routes/songs.py: Endpoints for searching songs, fetching a single song, logging a listen, and rating a song. Delegates to search_service.py, streak_service.py, and notification_service.py.
+
+- routes/playlists.py: Endpoints for creating a playlist and adding/retrieving its songs. Delegates to playlist_service.py and notification_service.py.
+
+- routes/users.py: Endpoints for a user's profile, streak, and notifications. Delegates to streak_service.py and notification_service.py.
+
+- routes/feed.py: Endpoints for "friends listening now" and the general activity feed. Delegates to feed_service.py.
+
+- services/streak_service.py: Records listening events and updates a user's day-over-day listening streak (`record_listening_event`, `update_listening_streak`).
+
+- services/feed_service.py: Builds the "friends listening now" feed (filtered to today) and the unfiltered recent activity feed.
+
+- services/search_service.py: Searches songs by title/artist (case-insensitive) and fetches a single song by ID.
+
+- services/notification_service.py: Creates and retrieves notifications, and handles adding a song to a playlist plus rating a song (each of which can trigger a notification).
+
+- services/playlist_service.py: Creates playlists and retrieves a playlist's songs in position order.
+
+- seed_data.py: Populates the database with sample users, songs, playlists, listening events, and notifications for local testing.
 
 ## Data Flow example
 
