@@ -1,3 +1,7 @@
+## AI Usage
+
+In this project, I used some AI tools to help me create tests, as well as help me with the commands neccessary to trigger the issues. As for the fixes themselves, I was able to come up with it myself.
+
 ## models.py
 
 This defines 7 SQLAlchemy models: User, Tag, Song, ListeningEvent, Rating, Playlist, and Notification.
@@ -28,10 +32,16 @@ POST /<user_id>/listening-now in routes/feed.py calls get_friends_listening_now(
 
 - To find the root cause, I started at users.py route, which led me to the streak_service.py file, and specifically the update_listening_streak function. Since this is the only function responsible for changing a user's streak, the reset bug must be occuring here.
 
-- The root cause of this was that there is a necessary today.weekday() != 6 check. This is a blunder, since sunday will be equal to 6, and then cause the streak not to be updated, and eventually reset to 1. This emans that every sunday, a streak will be reset.
+- The root cause of this was that there is a necessary `today.weekday() != 6` check. This is a blunder, since sunday will be equal to 6, and then cause the streak not to be updated, and eventually reset to 1. This emans that every sunday, a streak will be reset.
 
 - To fix this, I removed the `today.weekday() != 6` condition from the `elif days_since_last == 1` branch, so the streak increments on any consecutive day regardless of which day of the week it is. There was no legitimate reason for Sundays to be treated differently. `tests/test_streaks.py` already had a `test_streak_increments_on_sunday` test that captured this exact scenario and was failing before the fix; it now passes, and I re-ran the full test suite to confirm no other services regressed.
 
 ## Issue 3: The same song keeps showing up twice in search
 
-This has to do with the step where Song and song_tags are joined. If a song has multiple tags, then it will appear in mutliple rows, since the columns were joined, and therefore will result in duplicates. To trigger this, I took a look at the song and song tags joined table to see the duplicates.
+- This has to do with the step where Song and song_tags are joined. If a song has multiple tags, then it will appear in mutliple rows, since the columns were joined, and therefore will result in duplicates. To trigger this, I took a look at the song and song tags joined table to see the duplicates.
+
+- I started by looking at the songs.py route, then the search_service.py service and specifically the search function. I could see then that the joining of the two mentioned columns in the database might be causing issues.
+
+- As mentioned, the root cause of this is joining the Song and Song tags columns. Songs with multiple tags will cause multiple instances of the same song to appear in the search as a result, which causes the bug.
+
+- To fix, I simply removed the joining step in the db query, which removes all duplicates. I made sure to create tests where songs had multiple tags, and also ran the full test suite to make sure other systems were not affected.
